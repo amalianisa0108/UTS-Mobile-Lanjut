@@ -20,19 +20,23 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.unscramble.data.MAX_NO_OF_WORDS
 import com.example.unscramble.data.SCORE_INCREASE
 import com.example.unscramble.data.allWords
+import com.example.unscramble.data.wordsAdd
+import com.example.unscramble.data.wordsDao
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 /**
  * ViewModel containing the app data and methods to process the data
  */
 
-class GameViewModel : ViewModel() {
+class GameViewModel(private val wordsDao: wordsDao) : ViewModel() {
 
     // Game UI state
     private val _uiState = MutableStateFlow(GameUiState())
@@ -46,6 +50,10 @@ class GameViewModel : ViewModel() {
     private lateinit var currentWord: String
 
     init {
+        viewModelScope.launch {
+            wordsDao.getAllWords().collect{
+            }
+        }
         resetGame()
     }
 
@@ -138,6 +146,12 @@ class GameViewModel : ViewModel() {
         } else {
             usedWords.add(currentWord)
             shuffleCurrentWord(currentWord)
+        }
+    }
+
+    fun addWords(newWord: String) {
+        viewModelScope.launch {
+            wordsDao.insertWord(wordsAdd(word = newWord))
         }
     }
 }
