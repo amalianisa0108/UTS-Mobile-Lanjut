@@ -43,6 +43,7 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -56,10 +57,24 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.unscramble.R
+import com.example.unscramble.data.wordsAddDatabase
 import com.example.unscramble.ui.theme.UnscrambleTheme
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import com.example.unscramble.data.GameViewModelFactory
+
 
 @Composable
-fun GameScreen(gameViewModel: GameViewModel = viewModel()) {
+fun GameScreen() {
+    val context = LocalContext.current
+    val dao = wordsAddDatabase.getInstance(context).wordsDao()
+
+    val gameViewModel: GameViewModel = viewModel(
+        factory = GameViewModelFactory(dao)
+    )
+
     val gameUiState by gameViewModel.uiState.collectAsState()
     val mediumPadding = dimensionResource(R.dimen.padding_medium)
 
@@ -116,6 +131,27 @@ fun GameScreen(gameViewModel: GameViewModel = viewModel()) {
                     fontSize = 16.sp
                 )
             }
+
+            var text by remember { mutableStateOf("") }
+
+            OutlinedTextField(
+                value = text,
+                onValueChange = {text = it},
+                label = { Text("Add New Word")},
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Button(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = {gameViewModel.addWords(text)
+                text = ""}
+            ) {
+                Text(
+                    text = stringResource(R.string.add),
+                    fontSize = 16.sp
+                )
+            }
+
         }
 
         GameStatus(score = gameUiState.score, modifier = Modifier.padding(20.dp))
